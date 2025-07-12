@@ -22,10 +22,12 @@ const Requests = () => {
     fetchRequests();
   }, [user._id]);
 
-  // ✅ Handle Accept/Reject
+  // ✅ Accept/Reject request
   const handleStatus = async (id, status) => {
     try {
       await axios.put(`/api/request/status/${id}`, { status });
+
+      // Update status locally
       setReceived((prev) =>
         prev.map((req) =>
           req._id === id ? { ...req, status } : req
@@ -61,18 +63,18 @@ const Requests = () => {
                   <p className="text-sm text-gray-400">Status: {req.status}</p>
                 </div>
 
-                {/* ✅ Show buttons only if status is Pending */}
+                {/* ✅ Only show buttons when it's still pending */}
                 {req.status === "Pending" ? (
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleStatus(req._id, "Accepted")}
-                      className="bg-green-600 px-3 py-1 rounded hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleStatus(req._id, "Rejected")}
-                      className="bg-red-600 px-3 py-1 rounded hover:bg-red-700"
+                      className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
                     >
                       Reject
                     </button>
