@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
+const requestRoutes = require("./routes/request.routes");
 
 // Load env variables
 dotenv.config();
@@ -17,9 +18,9 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", require("./routes/auth.routes"));
-// Optional future routes:
 app.use("/api/user", require("./routes/user.routes"));
-app.use("/api/swap", require("./routes/swap.routes"));
+app.use("/api/request", requestRoutes);
+// app.use("/api/swap", require("./routes/swap.routes"));
 
 // Start server
 const PORT = process.env.PORT || 8080;
