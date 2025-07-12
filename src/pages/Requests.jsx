@@ -3,11 +3,10 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 
 const Requests = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
   const [sent, setSent] = useState([]);
   const [received, setReceived] = useState([]);
-  const user = JSON.parse(localStorage.getItem("user"));
 
-  // ✅ Fetch all requests
   useEffect(() => {
     const fetchRequests = async () => {
       try {
@@ -19,19 +18,15 @@ const Requests = () => {
         console.error("❌ Error fetching requests", err);
       }
     };
+
     fetchRequests();
   }, [user._id]);
 
-  // ✅ Accept/Reject request
-  const handleStatus = async (id, status) => {
+  const handleDecision = async (id, status) => {
     try {
       await axios.put(`/api/request/status/${id}`, { status });
-
-      // Update status locally
       setReceived((prev) =>
-        prev.map((req) =>
-          req._id === id ? { ...req, status } : req
-        )
+        prev.map((r) => (r._id === id ? { ...r, status } : r))
       );
     } catch (err) {
       alert("Failed to update request status");
@@ -39,88 +34,72 @@ const Requests = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="bg-gray-900 text-white min-h-screen">
       <Navbar />
+      <div className="p-6 max-w-3xl mx-auto">
+        {/* 🔵 Received Requests */}
+        <h2 className="text-xl font-bold mb-4">Received Requests</h2>
+        {received.length === 0 ? (
+          <p className="text-gray-400">No received requests.</p>
+        ) : (
+          received.map((r) => (
+            <div key={r._id} className="bg-gray-800 p-4 mb-3 rounded-lg">
+              <p><strong>{r.from.name}</strong> sent you a request.</p>
 
-      <div className="p-6 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Requests</h2>
-
-        {/* 🟦 Received Requests */}
-        <div className="mb-10">
-          <h3 className="text-xl font-semibold mb-4">Received Requests</h3>
-          {received.length === 0 ? (
-            <p className="text-gray-400">No incoming requests.</p>
-          ) : (
-            received.map((req) => (
-              <div
-                key={req._id}
-                className="bg-gray-800 p-4 mb-3 rounded-lg flex justify-between items-center"
-              >
-                <div>
-                  <p>
-                    <span className="font-semibold">{req.from.name}</span> has sent you a skill swap request.
-                  </p>
-                  <p className="text-sm text-gray-400">Status: {req.status}</p>
+              {/* ✅ Only buttons or final message */}
+              {r.status === "Accepted" ? (
+                <p className="text-sm italic text-green-400 mt-2">
+                  You have accepted this request.
+                </p>
+              ) : r.status === "Rejected" ? (
+                <p className="text-sm italic text-red-400 mt-2">
+                  You have rejected this request.
+                </p>
+              ) : (
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => handleDecision(r._id, "Accepted")}
+                    className="bg-green-600 px-3 py-1 rounded hover:bg-green-700"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleDecision(r._id, "Rejected")}
+                    className="bg-red-600 px-3 py-1 rounded hover:bg-red-700"
+                  >
+                    Reject
+                  </button>
                 </div>
+              )}
+            </div>
+          ))
+        )}
 
-                {/* ✅ Only show buttons when it's still pending */}
-                {req.status === "Pending" ? (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleStatus(req._id, "Accepted")}
-                      className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
-                    >
-                      Accept
-                    </button>
-                    <button
-                      onClick={() => handleStatus(req._id, "Rejected")}
-                      className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-sm italic text-yellow-400">
-                    You have {req.status.toLowerCase()} the request.
-                  </p>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* 🟨 Sent Requests */}
-        <div>
-          <h3 className="text-xl font-semibold mb-4">Sent Requests</h3>
-          {sent.length === 0 ? (
-            <p className="text-gray-400">You haven't sent any requests.</p>
-          ) : (
-            sent.map((req) => (
-              <div
-                key={req._id}
-                className="bg-gray-800 p-4 mb-3 rounded-lg flex justify-between items-center"
-              >
-                <div>
-                  <p>
-                    You sent a request to <span className="font-semibold">{req.to.name}</span>
-                  </p>
-                  <p className="text-sm text-gray-400">Status: {req.status}</p>
-                </div>
+        {/* 🟡 Sent Requests */}
+        <h2 className="text-xl font-bold mt-10 mb-4">Sent Requests</h2>
+        {sent.length === 0 ? (
+          <p className="text-gray-400">You haven't sent any requests.</p>
+        ) : (
+          sent.map((r) => (
+            <div key={r._id} className="bg-gray-800 p-4 mb-3 rounded-lg">
+              <p>You sent a request to <strong>{r.to.name}</strong>.</p>
+              <p className="text-sm text-gray-400 mt-1">
+                Status:{" "}
                 <span
-                  className={`text-sm font-semibold ${
-                    req.status === "Accepted"
-                      ? "text-green-400"
-                      : req.status === "Rejected"
-                      ? "text-red-400"
-                      : "text-yellow-300"
-                  }`}
+                  className={
+                    r.status === "Accepted"
+                      ? "text-green-400 font-semibold"
+                      : r.status === "Rejected"
+                      ? "text-red-400 font-semibold"
+                      : "text-yellow-300 font-semibold"
+                  }
                 >
-                  {req.status}
+                  {r.status}
                 </span>
-              </div>
-            ))
-          )}
-        </div>
+              </p>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
