@@ -2,9 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
-const requestRoutes = require("./routes/request.routes");
 
-// Load env variables
+// Route files
+const authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/user.routes");
+const requestRoutes = require("./routes/request.routes");
+// const swapRoutes = require("./routes/swap.routes"); // Uncomment if needed
+
+// Load .env config
 dotenv.config();
 
 // Connect to MongoDB
@@ -12,16 +17,18 @@ connectDB();
 
 const app = express();
 
-// Middleware
+// Middlewares
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
-// Routes
-app.use("/api/auth", require("./routes/auth.routes"));
-app.use("/api/user", require("./routes/user.routes"));
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/request", requestRoutes);
-// app.use("/api/swap", require("./routes/swap.routes"));
+// app.use("/api/swap", swapRoutes); // Future use
 
 // Start server
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});

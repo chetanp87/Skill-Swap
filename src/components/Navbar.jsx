@@ -1,12 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Navbar = ({ onFilterChange }) => {
   const [user, setUser] = useState(null);
+  const [hasRequests, setHasRequests] = useState(false);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     setUser(storedUser);
+
+    if (storedUser?._id) {
+      axios
+        .get(`/api/request/received/${storedUser._id}`)
+        .then((res) => {
+          setHasRequests(res.data.length > 0);
+        })
+        .catch((err) => {
+          console.error("Failed to check requests:", err);
+        });
+    }
   }, []);
 
   const handleLogout = () => {
@@ -18,7 +31,7 @@ const Navbar = ({ onFilterChange }) => {
 
   const handleAvailabilityChange = (e) => {
     const selected = e.target.value;
-    onFilterChange(selected === "All" ? "" : selected);
+    onFilterChange?.(selected === "All" ? "" : selected); // safe call
   };
 
   return (
@@ -26,9 +39,19 @@ const Navbar = ({ onFilterChange }) => {
       <h1 className="text-xl font-bold">Skill Swap Platform</h1>
 
       <div className="flex gap-4 items-center">
+        {/* ✅ Requests Button */}
+        {user && (
+          <Link to="/requests">
+            <button className="bg-indigo-600 px-3 py-2 rounded text-sm">
+              {hasRequests ? "🔔 Requests" : "Requests"}
+            </button>
+          </Link>
+        )}
+
+        {/* ✅ Availability Filter */}
         <select
           onChange={handleAvailabilityChange}
-          className="bg-gray-800 text-white px-3 py-2 rounded"
+          className="bg-gray-800 text-white px-3 py-2 rounded text-sm"
         >
           <option value="All">Availability</option>
           <option value="Weekends">Weekends</option>
@@ -36,12 +59,14 @@ const Navbar = ({ onFilterChange }) => {
           <option value="Evenings">Evenings</option>
         </select>
 
+        {/* ✅ Search (not working yet) */}
         <input
           type="text"
           placeholder="Search..."
-          className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-600"
+          className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-600 text-sm"
         />
 
+        {/* ✅ User Avatar or Login */}
         {user ? (
           <div className="flex items-center gap-3">
             <Link to="/profile">
@@ -49,7 +74,6 @@ const Navbar = ({ onFilterChange }) => {
                 {user.name ? user.name.charAt(0) : "U"}
               </div>
             </Link>
-
             <button
               onClick={handleLogout}
               className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-sm"
@@ -59,7 +83,7 @@ const Navbar = ({ onFilterChange }) => {
           </div>
         ) : (
           <Link to="/auth">
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded">
+            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm">
               Login
             </button>
           </Link>
